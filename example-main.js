@@ -76,7 +76,7 @@ fill: none;
 }
 
 .bfield-text {
-font-family: 'Roboto', sans-serif;
+font-family: sans-serif;
 font-size: 14px;
 text-anchor: middle;
 dominant-baseline: middle;
@@ -99,7 +99,7 @@ stroke-dasharray: 2;
 svg1.appendChild(stylesheet);
 
 // create bitfields
-var currentX = xOffset;
+let currentX = xOffset;
 for (let bitfield of bitfields)
 {
 let bitfieldGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
