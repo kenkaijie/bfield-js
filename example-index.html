@@ -15,7 +15,7 @@
             <v-btn class="mb-2" @click="downloadSVG">Download SVG</v-btn>
             </div>
             <v-flex xs12 sm12>
-              <v-expansion-panel expand>
+              <v-expansion-panel expand v-model="opened">
                   <v-expansion-panel-content>
                       <template v-slot:header><h3 class="subheading">Bit Fields</h3></template>
                       <v-divider></v-divider>
@@ -131,6 +131,7 @@
       el: '#app', 
       data: {
         darkTheme: true,
+        opened: [true],
         dialog: false,
         headers: [
           { text: 'Name',align: 'left', value: 'name' },
