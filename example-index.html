@@ -1,16 +1,221 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Page Title</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
 </head>
 <body>
-  <button onclick="OnGenerateExampleSVG()">Click Me!</button>
-  <div id="svg-gen"></div>
+  <div id="app">
+    <v-app v-bind:dark="darkTheme">
+      <v-container fluid fill-height>
+        <v-layout align-space-between justify-space-between column>
+            <div class="text-xs-center">
+            <v-btn class="mb-2" @click="generateSVG">Generate SVG</v-btn>
+            <v-btn class="mb-2" @click="downloadSVG">Download SVG</v-btn>
+            </div>
+            <v-flex xs12 sm12>
+              <v-expansion-panel expand>
+                  <v-expansion-panel-content>
+                      <template v-slot:header><h3 class="subheading">Bit Fields</h3></template>
+                      <v-divider></v-divider>
+                      <div class="text-xs-center">
+                        <v-btn class="mb-2" @click="newItem">New Field</v-btn>
+                        <v-dialog v-model="dialog" width="500">
+                          <template v-slot:activator="{ on }">
+                            <v-btn color="red lighten-2" v-on="on"> Clear All </v-btn>
+                          </template>
+                          <v-card>
+                              <v-card-title>
+                                <span class="headline">Confirm</span>
+                              </v-card-title>
+                    
+                              <v-card-text>
+                                Are you sure?
+                              </v-card-text>
+                    
+                              <v-card-actions>
+                                <v-spacer></v-spacer>
+                                <v-btn color="blue darken-1" flat @click="dialog=false">Cancel</v-btn>
+                                <v-btn color="red lighten-2 darken-1" flat @click="clearBitfield">Yes</v-btn>
+                              </v-card-actions>
+                            </v-card>
+                        </v-dialog>
+                      </div>
+                      <v-data-table
+                      :headers="headers"
+                      :items="bitfields"
+                      disable-initial-sort
+                      hide-actions
+                    >
+                      <template v-slot:items="props">
+                        <td>
+                          <v-edit-dialog :return-value.sync="props.item.name">
+                            {{ props.item.name }}
+                            <template v-slot:input>
+                              <v-text-field v-model="props.item.name" label="Name" single-line counter maxlength="20"></v-text-field>
+                            </template>
+                          </v-edit-dialog>
+                        </td>
+                        <td>
+                          <v-edit-dialog :return-value.sync="props.item.bitStart">
+                            {{ props.item.bitStart }}
+                            <template v-slot:input>
+                              <v-text-field  v-model="props.item.bitStart" label="Start Bit" single-line autofocus></v-text-field>
+                            </template>
+                          </v-edit-dialog>
+                        </td>
+                        <td>
+                            <v-edit-dialog :return-value.sync="props.item.bitEnd">
+                              {{ props.item.bitEnd }}
+                              <template v-slot:input>
+                                <v-text-field v-model="props.item.bitEnd" label="End Bit" single-line autofocus></v-text-field>
+                              </template>
+                            </v-edit-dialog>
+                        </td>
+                        <td>
+                            <v-edit-dialog :return-value.sync="props.item.access">
+                              {{ props.item.access }}
+                              <template v-slot:input>
+                                  <v-text-field v-model="props.item.access" Label="Access" autofocus single-line></v-text-field>
+                              </template>
+                            </v-edit-dialog>
+                        </td>
+                        <td>
+                          <div>
+                            <v-checkbox hide-details class="shrink mr-2" v-model="props.item.shaded"></v-checkbox>
+                          </div>
+                        </td>
+                        <td class="justify-center layout px-0">
+                            <v-icon small @click="deleteItem(props.item)">
+                              delete
+                            </v-icon>
+                          </td>
+                      </template>
+                    </v-data-table>
+                  </v-expansion-panel-content>
+                  <v-expansion-panel-content>
+                      <template v-slot:header><h3 class="subheading">Settings</h3></template>
+                      <v-divider></v-divider>
+                      <v-card>
+                          <v-card-text>
+                          <v-checkbox v-model="bitfieldOptions.msbRight" label="Most Significant Bit Right"></v-checkbox>
+                          <v-checkbox v-model="bitfieldOptions.showBitTick" label="Show Single Bit Tick"></v-checkbox>
+                          <v-checkbox v-model="bitfieldOptions.showAccess" label="Show Access Levels"></v-checkbox>
+                          <v-switch v-model="darkTheme" label="Dark Mode"></v-switch>
+                        </v-card-text>
+                    </v-card>
+                  </v-expansion-panel-content>
+              </v-expansion-panel>
+            </v-flex>
+            <v-spacer></v-spacer>
+          <v-flex xs12 pt-2>
+            <v-card  class="elavation-1" light>
+                <div id="svg-gen"></div>
+            </v-card>
+          </v-flex>
+        </v-layout>
+      </v-container>
+      <v-footer class="pa-3">
+        <v-spacer></v-spacer>
+        <div>Kenneth Ng &copy; {{ new Date().getFullYear() }}</div>
+      </v-footer>
+    </v-app>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+  <script src="example-main.js"></script>
+  <script>
+    new Vue({ 
+      el: '#app', 
+      data: {
+        darkTheme: true,
+        dialog: false,
+        headers: [
+          { text: 'Name',align: 'left', value: 'name' },
+          { text: 'Start Bit', value: 'bitStart' },
+          { text: 'End Bit', value: 'bitEnd' },
+          { text: 'Access', value: 'access' },
+          { text: 'Shaded', value: 'shaded' }
+        ],
+        bitfields: [
+          {bitStart:0, bitEnd:0, access:"R", name:"SYSACT", shaded: false},
+          {bitStart:1, bitEnd:2, access:"RW", name:"CLK", shaded: false},
+          {bitStart:3, bitEnd:7, access:"", name:"Reserved", shaded: true},
+          {bitStart:8, bitEnd:15, access:"W", name:"RETPATH", shaded: false},
+          {bitStart:16, bitEnd:23, access:"W", name:"COUNT", shaded: false},
+          {bitStart:24, bitEnd:24, access:"", name:"Reserved", shaded: true},
+          {bitStart:25, bitEnd:28, access:"W", name:"ERROR", shaded: false},
+          {bitStart:29, bitEnd:31, access:"W", name:"TESTLONGNAME", shaded: false},
+        ],
+        bitfieldOptions: {
+            majorTick:8,
+            showBitTick: true,
+            msbRight: false,
+            showAccess: true,
+            bitWidth : 25,
+            bitHeight : 50,
+            },
+        defaultItem: {
+          name: 'Field',
+          bitStart: 0,
+          bitEnd: 0,
+          access: "R",
+          shaded: false
+        },
+        currentSVG: undefined,
+      },
+
+      methods: {
+
+        getNextBit() {
+          let currentBit = 0;
+          if (this.bitfields.length > 0) {
+            currentBit = Math.max(...this.bitfields.map((item) => {return parseInt(item.bitEnd);})) + 1;
+          }
+          return currentBit;
+        },
+
+        newItem() {
+          let nextBitVal = this.getNextBit();
+          console.log(nextBitVal);
+          let newObject = Object.assign({}, this.defaultItem);
+          newObject.name += ' ' + nextBitVal;
+          newObject.bitStart = nextBitVal;
+          newObject.bitEnd = nextBitVal;
+          this.bitfields.push(newObject);
+        },
+
+        generateSVG() {
+            for (let bitfield of this.bitfields) {
+              bitfield.bitStart = parseInt(bitfield.bitStart);
+              bitfield.bitEnd = parseInt(bitfield.bitEnd);
+            }
+            this.currentSVG = GenerateSVG(this.bitfields, this.bitfieldOptions);
+        },
+        
+        clearBitfield(){
+          this.bitfields = [];
+          this.dialog = false;
+        },
+
+        deleteItem (item) {
+          const index = this.bitfields.indexOf(item);
+          this.bitfields.splice(index, 1);
+        },
+
+        downloadSVG() {
+          if (this.currentSVG !== undefined) {
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(new Blob([this.currentSVG.outerHTML]));
+            link.setAttribute('download', 'bitfield.svg');
+            document.body.appendChild(link);
+            link.click()
+          }
+        }
+      } 
+    });
+  </script>
 </body>
-<script src="example-main.js">
-  
-</script>
 </html>

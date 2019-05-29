@@ -16,12 +16,10 @@ function OnGenerateExampleSVG()
     ];
     
     const bitfieldOptions = {
-      bitCount:32,
       majorTick:8,
+      showBitTick: true,
       msbRight: false,
       showAccess: true,
-      xOffset: 100,
-      yOffset : 100,
       bitWidth : 25,
       bitHeight : 50,
     };
@@ -35,8 +33,9 @@ function OnGenerateExampleSVG()
 */
 function GenerateSVG(bitfieldsList, bitfieldOptions)
 {
-let xOffset = bitfieldOptions.xOffset;
-let yOffset = bitfieldOptions.yOffset;
+
+let xOffset = 100;
+let yOffset = 100;
 
 let bitWidth = bitfieldOptions.bitWidth;
 let bitHeight = bitfieldOptions.bitHeight;
@@ -52,11 +51,13 @@ while (rootNode.firstChild)
 {
 rootNode.removeChild(rootNode.firstChild);
 }
-const svg1 = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-rootNode.appendChild(svg1);
-svg1.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-svg1.setAttribute("width", bitWidth*bitfieldOptions.bitCount + 2* yOffset);
-svg1.setAttribute("height", 2*bitHeight + 2*xOffset + angleTextOffset);
+const bitfieldImage = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+rootNode.appendChild(bitfieldImage);
+bitfieldImage.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+bitfieldImage.setAttribute("class", "bfield");
+
+const svg1 = document.createElementNS("http://www.w3.org/2000/svg", "g");
+bitfieldImage.appendChild(svg1);
 
 // append stylesheet
 let stylesheet = document.createElementNS("http://www.w3.org/2000/svg", "style");
@@ -68,7 +69,7 @@ stroke-width: 2;
 }
 
 .bfield-shaded {
-fill: rgba(188, 207, 223, 0.596);
+fill: #bed0e0;
 }
 
 .bfield-unshaded {
@@ -100,8 +101,10 @@ svg1.appendChild(stylesheet);
 
 // create bitfields
 let currentX = xOffset;
+let bitCount = 0;
 for (let bitfield of bitfields)
 {
+  bitCount = Math.max(bitCount, bitfield.bitEnd);
 let bitfieldGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
 svg1.appendChild(bitfieldGroup);
 
@@ -117,30 +120,31 @@ rect.setAttribute("height", bitHeight);
 rect.setAttribute("class", "bfield-rect "+ ((bitfield.shaded)? "bfield-shaded" : "bfield-unshaded"));
 currentX += bitfieldWidth;
 
-let minorGridTicks = document.createElementNS("http://www.w3.org/2000/svg", "g");
-bitfieldGroup.appendChild(minorGridTicks);
+if (bitfieldOptions.showBitTick) {
+  let minorGridTicks = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  bitfieldGroup.appendChild(minorGridTicks);
 
-for (let i=initialX+bitWidth;i<(initialX+bitfieldWidth);i+=bitWidth)
-{
-  let minorGridTop = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  minorGridTicks.appendChild(minorGridTop);
+  for (let i=initialX+bitWidth;i<(initialX+bitfieldWidth);i+=bitWidth)
+  {
+    let minorGridTop = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    minorGridTicks.appendChild(minorGridTop);
 
-  minorGridTop.setAttribute("x1", i);
-  minorGridTop.setAttribute("y1", yOffset);
-  minorGridTop.setAttribute("x2", i);
-  minorGridTop.setAttribute("y2", yOffset + bitHeight/5);
-  minorGridTop.setAttribute("class", "bfield-line-dotted bfield-line");
-  
-  let minorGridBottom = document.createElementNS("http://www.w3.org/2000/svg", "line");
-  minorGridTicks.appendChild(minorGridBottom);
+    minorGridTop.setAttribute("x1", i);
+    minorGridTop.setAttribute("y1", yOffset);
+    minorGridTop.setAttribute("x2", i);
+    minorGridTop.setAttribute("y2", yOffset + bitHeight/5);
+    minorGridTop.setAttribute("class", "bfield-line-dotted bfield-line");
+    
+    let minorGridBottom = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    minorGridTicks.appendChild(minorGridBottom);
 
-  minorGridBottom.setAttribute("x1", i);
-  minorGridBottom.setAttribute("y1", yOffset + bitHeight);
-  minorGridBottom.setAttribute("x2", i);
-  minorGridBottom.setAttribute("y2", yOffset + 4*bitHeight/5);
-  minorGridBottom.setAttribute("class", "bfield-line-dotted bfield-line");
+    minorGridBottom.setAttribute("x1", i);
+    minorGridBottom.setAttribute("y1", yOffset + bitHeight);
+    minorGridBottom.setAttribute("x2", i);
+    minorGridBottom.setAttribute("y2", yOffset + 4*bitHeight/5);
+    minorGridBottom.setAttribute("class", "bfield-line-dotted bfield-line");
+  }
 }
-
 if (bitfieldOptions.showAccess && bitfield.access)
 {
   // write the bottom text
@@ -221,13 +225,15 @@ if ((nameBBox.width > bitfieldWidth) || (nameBBox.height > bitHeight))
 }
 }
 
+bitCount += 1; // index start from 1
+
 let majorGridLines =  document.createElementNS("http://www.w3.org/2000/svg", "g");
 svg1.appendChild(majorGridLines);
-
-// create the major ticks
-for (let idx=0; idx <= bitfieldOptions.bitCount; ++idx)
+// create the major ticks, starting from the end
+for (let idx=0; (idx <= bitCount) && (bitCount!==0); ++idx)
 {
-if (idx % bitfieldOptions.majorTick === 0)
+  let cursor = (!bitfieldOptions.msbRight)? bitCount-idx: idx;
+if (cursor % bitfieldOptions.majorTick === 0)
 {
   let majorGridLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
   majorGridLines.appendChild(majorGridLine);
@@ -239,7 +245,9 @@ if (idx % bitfieldOptions.majorTick === 0)
   majorGridLine.setAttribute("class", "bfield-line-dotted bfield-line");
 }
 }
-svg1.setAttribute("width", bitWidth*bitfieldOptions.bitCount + 2* yOffset);
-svg1.setAttribute("height", 2*bitHeight + 2*xOffset + angleTextOffset);
+
+bitfieldImage.setAttribute("viewBox",`0 0 ${bitWidth*bitCount + 2* yOffset} ${2*bitHeight + 2*xOffset + angleTextOffset}` );
+
 console.log("done");
+return bitfieldImage;
 }
