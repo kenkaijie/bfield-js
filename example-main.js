@@ -1,29 +1,12 @@
 'use strict';
-/**
- * Generates a sample bitfield
- */
-function OnGenerateExampleSVG()
+
+function ValidateBitfieldList(bitfieldList)
 {
-    const bitfield = [
-        {bitStart:0, bitEnd:0, access:"R", name:"SYSACT", shaded: false},
-        {bitStart:1, bitEnd:2, access:"RW", name:"CLK", shaded: false},
-        {bitStart:3, bitEnd:7, access:"", name:"Reserved", shaded: true},
-        {bitStart:8, bitEnd:15, access:"W", name:"RETPATH", shaded: false},
-        {bitStart:16, bitEnd:23, access:"W", name:"COUNT", shaded: false},
-        {bitStart:24, bitEnd:24, access:"", name:"Reserved", shaded: true},
-        {bitStart:25, bitEnd:28, access:"W", name:"ERROR", shaded: false},
-        {bitStart:29, bitEnd:31, access:"W", name:"TESTLONGNAME", shaded: false},
-    ];
-    
-    const bitfieldOptions = {
-      majorTick:8,
-      showBitTick: true,
-      msbRight: false,
-      showAccess: true,
-      bitWidth : 25,
-      bitHeight : 50,
-    };
-    GenerateSVG(bitfield, bitfieldOptions);
+  let isValid=true;
+
+  isValid != (bitfieldList.length > 0);
+
+  return isValid;
 }
 
 /**
@@ -31,8 +14,13 @@ function OnGenerateExampleSVG()
 * @param {Object} bitfield 
 * @param {Object} bitfieldOptions 
 */
-function GenerateSVG(bitfieldsList, bitfieldOptions)
+function GenerateSVG(rootNode, bitfieldsList, bitfieldOptions)
 {
+
+  if (!ValidateBitfieldList(bitfieldsList))
+  {
+    return undefined;
+  }
 
 let xOffset = 100;
 let yOffset = 100;
@@ -46,11 +34,7 @@ let angleTextOffset = 0; // used to compensate when the height of the image is t
 let bitfields = (!bitfieldOptions.msbRight)? bitfieldsList.slice().reverse() : bitfieldsList.slice();
 
 // create the main document
-const rootNode = document.getElementById("svg-gen");
-while (rootNode.firstChild)
-{
-rootNode.removeChild(rootNode.firstChild);
-}
+rootNode.innerHTML = ''; // we clear, we dont have to remove listeners because this is just an svg image
 const bitfieldImage = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 rootNode.appendChild(bitfieldImage);
 bitfieldImage.setAttribute("xmlns", "http://www.w3.org/2000/svg");
@@ -249,5 +233,5 @@ if (cursor % bitfieldOptions.majorTick === 0)
 bitfieldImage.setAttribute("viewBox",`0 0 ${bitWidth*bitCount + 2* yOffset} ${2*bitHeight + 2*xOffset + angleTextOffset}` );
 
 console.log("done");
-return bitfieldImage;
+return bitfieldImage.outerHTML;
 }
