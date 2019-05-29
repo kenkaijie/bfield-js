@@ -219,7 +219,7 @@
         downloadSVG() {
           if (this.currentSVG !== undefined) {
             const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(new Blob([this.currentSVG.outerHTML]));
+            link.href = window.URL.createObjectURL(new Blob([this.currentSVG]));
             link.setAttribute('download', 'bitfield.svg');
             document.body.appendChild(link);
             link.click()
