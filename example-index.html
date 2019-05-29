@@ -8,11 +8,17 @@
 <body>
   <div id="app">
     <v-app v-bind:dark="darkTheme">
+        <v-toolbar>
+            <v-spacer></v-spacer>
+            <v-toolbar-title>Bit Field SVG Generator</v-toolbar-title>
+            <v-spacer></v-spacer>
+          </v-toolbar>
       <v-container fluid fill-height>
         <v-layout align-space-between justify-space-between column>
-            <div class="text-xs-center">
-            <v-btn class="mb-2" @click="generateSVG">Generate SVG</v-btn>
-            <v-btn class="mb-2" @click="downloadSVG">Download SVG</v-btn>
+            <div class="text-xs-center mb-1">
+              <p>Just a small tool to generate bitfields. Enter the field information in the table and click generate.</p>
+              <v-btn class="mb-2" @click="generateSVG">Generate SVG <v-icon right>autorenew</v-icon></v-btn>
+              <v-btn class="mb-2" @click="downloadSVG">Download SVG <v-icon right>cloud_download</v-icon></v-btn>
             </div>
             <v-flex xs12 sm12>
               <v-expansion-panel expand v-model="opened">
@@ -31,13 +37,13 @@
                               </v-card-title>
                     
                               <v-card-text>
-                                Are you sure?
+                                Are you sure? This will also clear the current SVG.
                               </v-card-text>
                     
                               <v-card-actions>
                                 <v-spacer></v-spacer>
                                 <v-btn color="blue darken-1" flat @click="dialog=false">Cancel</v-btn>
-                                <v-btn color="red lighten-2 darken-1" flat @click="clearBitfield">Yes</v-btn>
+                                <v-btn color="red lighten-2" flat @click="clearBitfield">Yes</v-btn>
                               </v-card-actions>
                             </v-card>
                         </v-dialog>
@@ -87,10 +93,10 @@
                           </div>
                         </td>
                         <td class="justify-center layout px-0">
-                            <v-icon small @click="deleteItem(props.item)">
+                            <v-icon @click="deleteItem(props.item)">
                               delete
                             </v-icon>
-                          </td>
+                        </td>
                       </template>
                     </v-data-table>
                   </v-expansion-panel-content>
@@ -138,7 +144,8 @@
           { text: 'Start Bit', value: 'bitStart' },
           { text: 'End Bit', value: 'bitEnd' },
           { text: 'Access', value: 'access' },
-          { text: 'Shaded', value: 'shaded' }
+          { text: 'Shaded', value: 'shaded' },
+          { text: '', value: '' }
         ],
         bitfields: [
           {bitStart:0, bitEnd:0, access:"R", name:"SYSACT", shaded: false},
@@ -187,23 +194,26 @@
           newObject.bitEnd = nextBitVal;
           this.bitfields.push(newObject);
         },
-
-        generateSVG() {
-            for (let bitfield of this.bitfields) {
-              bitfield.bitStart = parseInt(bitfield.bitStart);
-              bitfield.bitEnd = parseInt(bitfield.bitEnd);
-            }
-            this.currentSVG = GenerateSVG(this.bitfields, this.bitfieldOptions);
-        },
         
         clearBitfield(){
           this.bitfields = [];
+          document.getElementById("svg-gen").innerHTML = '';
           this.dialog = false;
         },
 
         deleteItem (item) {
           const index = this.bitfields.indexOf(item);
           this.bitfields.splice(index, 1);
+        },
+
+        generateSVG() {
+          if (this.bitfields.length > 0 ) {
+            for (let bitfield of this.bitfields) {
+              bitfield.bitStart = parseInt(bitfield.bitStart);
+              bitfield.bitEnd = parseInt(bitfield.bitEnd);
+            }
+            this.currentSVG = GenerateSVG(document.getElementById("svg-gen"), this.bitfields, this.bitfieldOptions);
+          }
         },
 
         downloadSVG() {
