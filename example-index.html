@@ -4,16 +4,33 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+  <title>Bit Field SVG Generator</title>
 </head>
 <body>
   <div id="app">
     <v-app v-bind:dark="darkTheme">
         <v-toolbar>
-            <v-spacer></v-spacer>
             <v-toolbar-title>Bit Field SVG Generator</v-toolbar-title>
             <v-spacer></v-spacer>
-          </v-toolbar>
+            <v-toolbar-items>
+              <v-btn href="https://github.com/kenkaijie/bfield-js" flat>Github</v-btn>
+            </v-toolbar-items>
+        </v-toolbar>
       <v-container fluid fill-height>
+          <v-snackbar
+          v-model="snackbar"
+          top
+          :timeout="snackbarTimeout"
+          :color="snackbarColor"
+        >
+          {{ snackbarText }}
+          <v-btn
+            flat
+            @click="snackbar = false"
+          >
+            Close
+          </v-btn>
+        </v-snackbar>
         <v-layout align-space-between justify-space-between column>
             <div class="text-xs-center mb-1">
               <p>Just a small tool to generate bitfields. Enter the field information in the table and click generate.</p>
@@ -25,9 +42,32 @@
                   <v-expansion-panel-content>
                       <template v-slot:header><h3 class="subheading">Bit Fields</h3></template>
                       <v-divider></v-divider>
-                      <div class="text-xs-center">
+                      <div class="text-xs-center my-4">
+                          <p>Bitfields start from index 0 and count upwards.</p>
+                          <v-dialog v-model="dialogImport" width="500" persistent>
+                              <template v-slot:activator="{ on }">
+                                <v-btn lass="mb-2" v-on="on"> Import </v-btn>
+                              </template>
+                              <v-card>
+                                  <v-card-title>
+                                    <span class="headline">Import/Export</span>
+                                  </v-card-title>
+                        
+                                  <v-card-text>
+                                    Paste your JSON values for import here:
+                                    <v-textarea :error-messages="importErrors" v-model="bitfieldsJSON"></v-textarea>
+                                  </v-card-text>
+                        
+                                  <v-card-actions>
+                                    <v-spacer></v-spacer>
+                                    <v-btn color="red lighten-2" flat @click="dialogImport=false">Cancel</v-btn>
+                                    <v-btn color="blue darken-1" flat @click="importJSON">Import</v-btn>
+                                  </v-card-actions>
+                                </v-card>
+                            </v-dialog>
+                        <v-btn class="mb-2" @click="exportJSON">Export</v-btn>
                         <v-btn class="mb-2" @click="newItem">New Field</v-btn>
-                        <v-dialog v-model="dialog" width="500">
+                        <v-dialog v-model="dialogClear" width="500">
                           <template v-slot:activator="{ on }">
                             <v-btn color="red lighten-2" v-on="on"> Clear All </v-btn>
                           </template>
@@ -42,7 +82,7 @@
                     
                               <v-card-actions>
                                 <v-spacer></v-spacer>
-                                <v-btn color="blue darken-1" flat @click="dialog=false">Cancel</v-btn>
+                                <v-btn color="blue darken-1" flat @click="dialogClear=false">Cancel</v-btn>
                                 <v-btn color="red lighten-2" flat @click="clearBitfield">Yes</v-btn>
                               </v-card-actions>
                             </v-card>
@@ -53,10 +93,11 @@
                       :items="bitfields"
                       disable-initial-sort
                       hide-actions
+                      class="mb-4"
                     >
                       <template v-slot:items="props">
                         <td>
-                          <v-edit-dialog :return-value.sync="props.item.name">
+                          <v-edit-dialog :return-value="props.item.name">
                             {{ props.item.name }}
                             <template v-slot:input>
                               <v-text-field v-model="props.item.name" label="Name" single-line counter maxlength="20"></v-text-field>
@@ -64,32 +105,32 @@
                           </v-edit-dialog>
                         </td>
                         <td>
-                          <v-edit-dialog :return-value.sync="props.item.bitStart">
+                          <v-edit-dialog :return-value="props.item.bitStart">
                             {{ props.item.bitStart }}
                             <template v-slot:input>
-                              <v-text-field  v-model="props.item.bitStart" label="Start Bit" single-line autofocus></v-text-field>
+                              <v-text-field type="number" v-model.number="props.item.bitStart" min="0" label="Start Bit" single-line autofocus></v-text-field>
                             </template>
                           </v-edit-dialog>
                         </td>
                         <td>
-                            <v-edit-dialog :return-value.sync="props.item.bitEnd">
+                            <v-edit-dialog :return-value="props.item.bitEnd">
                               {{ props.item.bitEnd }}
                               <template v-slot:input>
-                                <v-text-field v-model="props.item.bitEnd" label="End Bit" single-line autofocus></v-text-field>
+                                <v-text-field type="number" v-model.number="props.item.bitEnd" min="0" label="End Bit" single-line autofocus></v-text-field>
                               </template>
                             </v-edit-dialog>
                         </td>
                         <td>
-                            <v-edit-dialog :return-value.sync="props.item.access">
+                            <v-edit-dialog :return-value="props.item.access">
                               {{ props.item.access }}
                               <template v-slot:input>
-                                  <v-text-field v-model="props.item.access" Label="Access" autofocus single-line></v-text-field>
+                                  <v-select :items="accessOptions" v-model="props.item.access" Label="Access" autofocus single-line></v-select>
                               </template>
                             </v-edit-dialog>
                         </td>
                         <td>
                           <div>
-                            <v-checkbox hide-details class="shrink mr-2" v-model="props.item.shaded"></v-checkbox>
+                            <v-checkbox hide-details v-model="props.item.shaded"></v-checkbox>
                           </div>
                         </td>
                         <td class="justify-center layout px-0">
@@ -105,10 +146,13 @@
                       <v-divider></v-divider>
                       <v-card>
                           <v-card-text>
+                            <div class="mt-5">
+                          <v-slider v-model="bitfieldOptions.majorTick" label="Major Tick"  min="0" max="32" step="1" thumb-label="always"  color="blue accent-1" thumb-color="blue accent-1"></v-slider>
                           <v-checkbox v-model="bitfieldOptions.msbRight" label="Most Significant Bit Right"></v-checkbox>
                           <v-checkbox v-model="bitfieldOptions.showBitTick" label="Show Single Bit Tick"></v-checkbox>
                           <v-checkbox v-model="bitfieldOptions.showAccess" label="Show Access Levels"></v-checkbox>
                           <v-switch v-model="darkTheme" label="Dark Mode"></v-switch>
+                        </div>
                         </v-card-text>
                     </v-card>
                   </v-expansion-panel-content>
@@ -136,12 +180,19 @@
     new Vue({ 
       el: '#app', 
       data: {
+        accessOptions: ["", "R", "W", "RW"],
         darkTheme: true,
         opened: [true],
-        dialog: false,
+        snackbar: false,
+        snackbarColor: undefined,
+        snackbarText: "",
+        snackbarTimeout: 1500,
+        dialogClear: false,
+        dialogImport: false,
+        importErrors: [],
         headers: [
           { text: 'Name',align: 'left', value: 'name' },
-          { text: 'Start Bit', value: 'bitStart' },
+          { text: 'Start Bit', value: 'bitStart'},
           { text: 'End Bit', value: 'bitEnd' },
           { text: 'Access', value: 'access' },
           { text: 'Shaded', value: 'shaded' },
@@ -173,9 +224,20 @@
           shaded: false
         },
         currentSVG: undefined,
+        bitfieldsJSON: "",
       },
 
       methods: {
+
+        showSnackBar(message, color=undefined, timeout=1500) {
+          if (this.snackbar) {
+            this.snackbar = false;
+          }
+          this.snackbarTimeout = timeout;
+          this.snackbarColor = color;
+          this.snackbar = true;
+          this.snackbarText = message;
+        },
 
         getNextBit() {
           let currentBit = 0;
@@ -198,7 +260,7 @@
         clearBitfield(){
           this.bitfields = [];
           document.getElementById("svg-gen").innerHTML = '';
-          this.dialog = false;
+          this.dialogClear = false;
         },
 
         deleteItem (item) {
@@ -208,11 +270,10 @@
 
         generateSVG() {
           if (this.bitfields.length > 0 ) {
-            for (let bitfield of this.bitfields) {
-              bitfield.bitStart = parseInt(bitfield.bitStart);
-              bitfield.bitEnd = parseInt(bitfield.bitEnd);
+            this.currentSVG = generateSVG(document.getElementById("svg-gen"), this.bitfields, this.bitfieldOptions);
+            if (this.currentSVG === undefined) {
+              this.showSnackBar("Cannot Generate SVG! Check your bit fields.", "red lighten-2", 3000);
             }
-            this.currentSVG = GenerateSVG(document.getElementById("svg-gen"), this.bitfields, this.bitfieldOptions);
           }
         },
 
@@ -222,9 +283,42 @@
             link.href = window.URL.createObjectURL(new Blob([this.currentSVG]));
             link.setAttribute('download', 'bitfield.svg');
             document.body.appendChild(link);
-            link.click()
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            this.showSnackBar("Generate an SVG first!", "red lighten-2", 3000);
           }
-        }
+        },
+
+        importJSON() {
+          try {
+            const inputJSON = JSON.parse(this.bitfieldsJSON);
+            if (validateBitfieldList(inputJSON)) {
+              this.bitfields = inputJSON;
+            } else {
+              // shortcut to get the invalid string
+              throw Error();
+            }
+            this.dialogImport = false;
+            this.importErrors = [];
+          } catch (error) {
+            // just ignore
+            this.importErrors = ["Invalid import string"];
+          }
+        },
+
+        exportJSON() {
+          const el = document.createElement('textarea');
+          el.value = JSON.stringify(this.bitfields);
+          el.setAttribute('readonly', '');
+          el.style.position = 'absolute';
+          el.style.left = '-9999px';
+          document.body.appendChild(el);
+          el.select();
+          document.execCommand('copy');
+          document.body.removeChild(el);
+          this.showSnackBar("Table copied to clipboard!");
+        },
       } 
     });
   </script>

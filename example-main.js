@@ -1,10 +1,60 @@
 'use strict';
 
-function ValidateBitfieldList(bitfieldList)
+/**
+ * Returns true if a === b
+ * 
+ * @param {Array} a 
+ * @param {Array} b 
+ */
+function arrayExactEqual(a, b) {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let idx = 0; idx < a.length; ++idx) {
+    if (a[idx] !== b[idx]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+/**
+ * Validates the bitfields for their typing and structural composition.
+ * 
+ * @param {Array} bitfieldList 
+ */
+function validateBitfieldList(bitfieldList)
 {
   let isValid=true;
 
-  isValid != (bitfieldList.length > 0);
+  // Validate Structure
+  const bitfieldFields = ['name', 'bitStart', 'bitEnd', 'access', 'shaded'];
+  try {
+    isValid &= (bitfieldList.length > 0);
+    bitfieldList.map((item)=> {
+      isValid &=  arrayExactEqual(Object.keys(item).sort(),bitfieldFields.sort());
+      isValid &= typeof item.name === "string"
+      isValid &= typeof item.bitStart === "number"
+      isValid &= typeof item.bitEnd === "number"
+      isValid &= typeof item.access === "string"
+      isValid &= typeof item.shaded === "boolean"
+    });
+  } catch (error) {
+    isValid = false;
+  }
+
+  // Validate Values
+  let bitCounter = 0;
+  for (const bitfield of bitfieldList) {
+    isValid &= (bitfield.bitStart === bitCounter);
+    isValid &= (bitfield.bitEnd >= bitfield.bitStart);
+    if (isValid) {
+      bitCounter = bitfield.bitEnd + 1;
+    } else {
+      break;
+    }
+  }
 
   return isValid;
 }
@@ -14,10 +64,10 @@ function ValidateBitfieldList(bitfieldList)
 * @param {Object} bitfield 
 * @param {Object} bitfieldOptions 
 */
-function GenerateSVG(rootNode, bitfieldsList, bitfieldOptions)
+function generateSVG(rootNode, bitfieldsList, bitfieldOptions)
 {
 
-  if (!ValidateBitfieldList(bitfieldsList))
+  if (!validateBitfieldList(bitfieldsList))
   {
     return undefined;
   }
