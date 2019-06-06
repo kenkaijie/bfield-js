@@ -4,16 +4,23 @@
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+  <script src="example-main.js"></script>
   <title>Bit Field SVG Generator</title>
 </head>
-<body>
-  <div id="app">
+<body style="background-color:#303030">
+  <div id="delayed-body">
+  <script>
+    document.getElementById("delayed-body").style.display = "none";
+  </script>
+  <div id="app" >
     <v-app v-bind:dark="darkTheme">
         <v-toolbar>
             <v-toolbar-title>Bit Field SVG Generator</v-toolbar-title>
             <v-spacer></v-spacer>
             <v-toolbar-items>
-              <v-btn href="https://github.com/kenkaijie/bfield-js" flat>Github</v-btn>
+              <v-btn target="_blank" href="https://github.com/kenkaijie/bfield-js" flat>Github</v-btn>
             </v-toolbar-items>
         </v-toolbar>
       <v-container fluid fill-height>
@@ -172,10 +179,7 @@
       </v-footer>
     </v-app>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
-  <script src="example-main.js"></script>
+</div>
   <script>
     new Vue({ 
       el: '#app', 
@@ -321,6 +325,9 @@
         },
       } 
     });
+  </script>
+  <script>
+      document.getElementById("delayed-body").style.display = "initial";
   </script>
 </body>
 </html>
