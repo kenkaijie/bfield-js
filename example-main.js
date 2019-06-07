@@ -280,7 +280,11 @@ if (cursor % bitfieldOptions.majorTick === 0)
 }
 }
 
-bitfieldImage.setAttribute("viewBox",`0 0 ${bitWidth*bitCount + 2* yOffset} ${2*bitHeight + 2*xOffset + angleTextOffset}` );
+
+// we clip and scale the SVG now
+var svgBBox = svg1.getBBox();
+svg1.setAttribute('style',`transform:translate(${-1*svgBBox.x}px, ${-1*svgBBox.y}px);`);
+bitfieldImage.setAttribute("viewBox",`0 0 ${svgBBox.width} ${svgBBox.height}` );
 
 console.log("done");
 return bitfieldImage.outerHTML;
