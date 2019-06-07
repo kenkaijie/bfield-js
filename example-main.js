@@ -188,7 +188,7 @@ if (bitfieldOptions.showAccess && bitfield.access)
   accessText.textContent = bitfield.access;
   accessText.setAttribute("class", "bfield-text");
   // now that it's set in the document, we will check it's size
-  let accessBBox = accessText.getBoundingClientRect();
+  let accessBBox = accessText.getBBox();
   accessText.setAttribute("x", initialX + bitfieldWidth/2);
   accessText.setAttribute("y", yOffset + bitHeight + accessBBox.height);
 
@@ -202,7 +202,7 @@ bitfieldGroup.appendChild(leftIndex);
 leftIndex.textContent = (!bitfieldOptions.msbRight)? bitfield.bitEnd : bitfield.bitStart;
 leftIndex.setAttribute("class", "bfield-text");
 // now that it's set in the document, we will check it's size
-let leftBBox = leftIndex.getBoundingClientRect();
+let leftBBox = leftIndex.getBBox();
 leftIndex.setAttribute("x", initialX + bitWidth/2);
 leftIndex.setAttribute("y", yOffset - leftBBox.height/2);
 
@@ -215,7 +215,7 @@ bitfieldGroup.appendChild(rightIndex);
 rightIndex.textContent = (!bitfieldOptions.msbRight)? bitfield.bitStart : bitfield.bitEnd;
 rightIndex.setAttribute("class", "bfield-text");
 // now that it's set in the document, we will check it's size
-let rightBBox = rightIndex.getBoundingClientRect();
+let rightBBox = rightIndex.getBBox();
 rightIndex.setAttribute("x", currentX - bitWidth/2);
 rightIndex.setAttribute("y", yOffset - rightBBox.height/2);
 }
@@ -227,7 +227,7 @@ bitfieldGroup.appendChild(nameText);
 nameText.textContent = bitfield.name;
 nameText.setAttribute("class", "bfield-text");
 // now that it's set in the document, we will check it's size
-let nameBBox = nameText.getBoundingClientRect();
+let nameBBox = nameText.getBBox();
 nameText.setAttribute("x", initialX + bitfieldWidth/2);
 nameText.setAttribute("y", yOffset + bitHeight/2);
 
@@ -255,7 +255,7 @@ if ((nameBBox.width > bitfieldWidth) || (nameBBox.height > bitHeight))
   nameText.setAttribute("x", targetx);
   nameText.setAttribute("y", targety + nameStartY);
   nameText.setAttribute("transform", `rotate(-45 ${targetx} ${targety + nameStartY})`);
-  angleTextOffset = Math.max(angleTextOffset, nameText.getBoundingClientRect().height);
+  angleTextOffset = Math.max(angleTextOffset, nameText.getBBox().height);
 }
 }
 
